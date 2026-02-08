@@ -1,4 +1,4 @@
-# Complete Results Summary: ML Asset Pricing (HW2)
+# Complete Results Summary: ML Asset Pricing
 
 ## Problem 1: ML-Based Cross-Sectional Return Prediction
 

@@ -22,7 +22,9 @@ Rank-weighted L/S portfolios for each of 209 characteristics. Annualized OOS Sha
 | :--- | :--- | :--- |
 | 1 | High52 | +2.79 |
 | 2 | VolMkt | +0.95 |
-| 3 | Mom12m | +0.83 |
+| 3 | DolVol | +0.68 |
+| 4 | AnnouncementReturn | +0.64 |
+| 5 | zerotrade6M | +0.57 |
 
 > *Insight:* Small caps show weaker, more compressed Sharpe ratios and surface liquidity-related signals.
 

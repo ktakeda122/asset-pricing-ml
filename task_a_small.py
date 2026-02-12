@@ -104,9 +104,13 @@ print(f"  Median Sharpe: {valid['sharpe'].median():.3f}")
 
 
 # ── 5. Bar plot ──────────────────────────────────────────────────────────────
+
+plot_df = res_df.dropna(subset=["sharpe"])
+
 fig, ax = plt.subplots(figsize=(20, 8))
 colors = ["#2ecc71" if s > 0 else "#e74c3c" for s in res_df["sharpe"].values]
-ax.bar(range(len(res_df)), res_df["sharpe"].values, color=colors, width=1.0, edgecolor="none")
+
+ax.bar(range(len(plot_df)), plot_df["sharpe"].values, color=colors, width=1.0, edgecolor="none")
 
 ax.set_xlabel("Characteristic (sorted by Sharpe Ratio)", fontsize=12)
 ax.set_ylabel("Annualized Sharpe Ratio", fontsize=12)
@@ -116,17 +120,21 @@ ax.axhline(y=0, color="black", linewidth=0.8)
 # Annotate top 5 and bottom 5
 top5 = res_df.head(5)
 bot5 = valid.tail(5)
+
 for idx, (char, row) in enumerate(top5.iterrows()):
     ax.annotate(char, (idx, row["sharpe"]),
                 textcoords="offset points", xytext=(5, 5),
-                fontsize=7, rotation=45, ha="left")
+                fontsize=8, rotation=45, ha="left")
+
+# Bottom 5 annotation
 for idx_offset, (char, row) in enumerate(bot5.iterrows()):
-    pos = len(res_df) - 5 + idx_offset
+    pos = len(plot_df) - 5 + idx_offset
+    
     ax.annotate(char, (pos, row["sharpe"]),
                 textcoords="offset points", xytext=(5, -15),
-                fontsize=7, rotation=45, ha="left")
+                fontsize=8, rotation=45, ha="left")
 
-ax.set_xlim(-1, len(res_df))
+ax.set_xlim(-1, len(plot_df))
 plt.tight_layout()
 plt.savefig("task_a_small_sharpe_ratios.png", dpi=150, bbox_inches="tight")
 plt.show()

@@ -164,17 +164,21 @@ Replace raw returns with first $K$ PCA factors, then run indicator regression:
 
 ### Task 2(e): Best Portfolio — Maximum OOS Sharpe
 
-**Systematic search over 40+ strategies (raw, PCA, factor screening, ensembles):**
+**Systematic search over strategies using `lsret` portfolios (Raw, PCA, Ensembles):**
 
-| Rank | Strategy | Sharpe | Months |
-| :--- | :--- | :--- | :--- |
-| 1 | LgCap Ridge+Lasso Avg | **+10.75** | 160 |
-| 2 | LgCap Ridge Raw | +10.74 | 160 |
-| 3 | LgCap Ridge PCA K=30 | +9.55 | 160 |
-| 4 | LgCap Lasso PCA K=40 | +9.43 | 160 |
-| 5 | LgCap Ridge PCA K=50 | +9.39 | 160 |
+| Rank | Strategy | Sharpe | Months | Description |
+| :--- | :--- | :--- | :--- | :--- |
+| 1 | **lsret Ridge PCA K=20** | **+1.84** | 235 | PCA K=20, Ridge |
+| 2 | lsret Lasso PCA K=20 | +1.82 | 235 | PCA K=20, Lasso (14/20 nz) |
+| 3 | lsret Ridge Raw | +1.72 | 235 | Ridge alpha=1.00e-04, 108 ports |
+| 4 | lsret Opt Ensemble | +1.72 | 235 | 100% Ridge (Train-optimized) |
+| 5 | lsret Lasso PCA K=30 | +1.68 | 235 | PCA K=30, Lasso (19/30 nz) |
 
-> *Winner:* 50/50 Ridge+Lasso ensemble on Large Cap L/S portfolios — SR = +10.75. Ridge captures the full covariance structure; Lasso concentrates on the 6 strongest factors. Averaging diversifies across two complementary estimation approaches.
+> **Winner:** **Ridge Regression on PCA Factors (K=20)** — **SR = +1.842**
+>
+> * **Methodology:** The strategy applies PCA to reduce the 108 raw portfolios into 20 latent factors, followed by Ridge regression.
+> * **Why it works:** Dimensionality reduction ($K=20$) effectively filters out noise from the highly correlated raw portfolios. Ridge regression outperforms Lasso in this reduced space, indicating that once noise is removed, retaining exposure to all 20 factors is more beneficial than selecting a subset.
+> * **Performance:** It achieved the highest OOS Sharpe Ratio over the full 235-month test period, outperforming both the raw return models (+1.72) and optimized ensembles.
 
 ---
 

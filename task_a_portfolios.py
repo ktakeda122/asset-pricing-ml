@@ -88,15 +88,16 @@ for rank, (char, row) in enumerate(res_df.head(5).iterrows(), 1):
     print(f"  {rank}. {char:30s}  Sharpe={row['sharpe']:+.3f}  "
           f"Ann.Mean={row['mean']:+.4f}  Months={int(row['n_months'])}")
 
+valid = res_df.dropna(subset=["sharpe"])
 print("\n" + "=" * 70)
 print("BOTTOM 5 CHARACTERISTICS (lowest annualized Sharpe)")
 print("=" * 70)
-for rank, (char, row) in enumerate(res_df.tail(5).iterrows(), 1):
+for rank, (char, row) in enumerate(valid.tail(5).iterrows(), 1):
     print(f"  {rank}. {char:30s}  Sharpe={row['sharpe']:+.3f}  "
           f"Ann.Mean={row['mean']:+.4f}  Months={int(row['n_months'])}")
 
 # Stats
-valid = res_df.dropna(subset=["sharpe"])
+
 print(f"\nSummary: {len(valid)} characteristics with valid Sharpe ratios")
 print(f"  Sharpe range: [{valid['sharpe'].min():.3f}, {valid['sharpe'].max():.3f}]")
 print(f"  Median Sharpe: {valid['sharpe'].median():.3f}")
@@ -115,13 +116,13 @@ ax.axhline(y=0, color="black", linewidth=0.8)
 
 # Label top 5 and bottom 5
 top5 = res_df.head(5)
-bot5 = res_df.tail(5)
+bot5 = valid.tail(5)
 for idx, (char, row) in enumerate(top5.iterrows()):
     ax.annotate(char, (idx, row["sharpe"]),
                 textcoords="offset points", xytext=(5, 5),
                 fontsize=7, rotation=45, ha="left")
 for idx_offset, (char, row) in enumerate(bot5.iterrows()):
-    pos = len(res_df) - 5 + idx_offset
+    pos = len(valid) - 5 + idx_offset
     ax.annotate(char, (pos, row["sharpe"]),
                 textcoords="offset points", xytext=(5, -15),
                 fontsize=7, rotation=45, ha="left")

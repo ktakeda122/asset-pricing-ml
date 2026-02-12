@@ -1,16 +1,17 @@
 """
 Task 2(e): Construct the Highest OOS Sharpe Ratio Portfolio
 ===========================================================
-Systematically try multiple strategies and ensembles from Problems 1 & 2,
-all evaluated on the common post-2004 OOS window.
+Using the portfolios from lsret.csv, attempt to form a portfolio that
+earns the highest possible Sharpe ratio out-of-sample.
 
-Candidate strategies:
-  A. Large Cap indicator Ridge/Lasso (raw returns)
-  B. Large Cap PCA indicator (various K)
-  C. lsret indicator Ridge/Lasso (raw + PCA)
-  D. Cross-universe ensembles
-  E. PCA factor screening (select factors by in-sample Sharpe)
-  F. Optimized ensemble weights (grid search, NO look-ahead)
+Candidate strategies (all derived from lsret.csv):
+  A. Raw indicator Ridge/Lasso regression
+  B. PCA indicator regression (various K)
+  E. Optimized multi-strategy ensemble (grid search, NO look-ahead)
+
+Large Cap strategies (A-C) are also computed for reference but are
+excluded from the final ranking and winner selection per the task
+instructions.
 """
 
 import pandas as pd
@@ -268,37 +269,37 @@ if len(common) > 0:
 
 
 # ── E. Optimized 3-Strategy Ensemble (weights from TRAIN period) ─────────────
-print("\n--- E. Optimized Multi-Strategy Ensemble ---")
+print("\n--- E. Optimized Multi-Strategy Ensemble (lsret) ---")
 
-# Build train-period portfolios for weight optimization
-Y_tr_lg = np.ones(R_tr_lg.shape[0])
-ridge_lg = RidgeCV(alphas=np.logspace(-4, 8, 100), cv=tscv, fit_intercept=False)
-ridge_lg.fit(R_tr_lg, Y_tr_lg)
-train_port_lg_ridge = R_tr_lg @ ridge_lg.coef_
+# Build train-period portfolios for weight optimization using lsret
+Y_tr_ls_e = np.ones(R_tr_ls.shape[0])
+ridge_ls_e = RidgeCV(alphas=np.logspace(-4, 8, 100), cv=tscv, fit_intercept=False)
+ridge_ls_e.fit(R_tr_ls, Y_tr_ls_e)
+train_port_ls_ridge = R_tr_ls @ ridge_ls_e.coef_
 
-lasso_lg = LassoCV(alphas=np.logspace(-5, 1, 100), cv=tscv,
-                    fit_intercept=False, max_iter=50000)
-lasso_lg.fit(R_tr_lg, Y_tr_lg)
-train_port_lg_lasso = R_tr_lg @ lasso_lg.coef_
+lasso_ls_e = LassoCV(alphas=np.logspace(-5, 1, 100), cv=tscv,
+                      fit_intercept=False, max_iter=50000)
+lasso_ls_e.fit(R_tr_ls, Y_tr_ls_e)
+train_port_ls_lasso = R_tr_ls @ lasso_ls_e.coef_
 
-# PCA K=20 on Large Cap train
-pca_lg = PCA(n_components=R_tr_lg.shape[1])
-pca_lg.fit(R_tr_lg)
-V_lg = pca_lg.components_
-F_tr_lg20 = (R_tr_lg @ V_lg.T)[:, :20]
-ridge_pca20 = RidgeCV(alphas=np.logspace(-4, 8, 100), cv=tscv, fit_intercept=False)
-ridge_pca20.fit(F_tr_lg20, Y_tr_lg)
-train_port_lg_pca20 = F_tr_lg20 @ ridge_pca20.coef_
-test_port_lg_pca20  = (R_te_lg @ V_lg.T)[:, :20] @ ridge_pca20.coef_
+# PCA K=20 on lsret train
+pca_ls_e = PCA(n_components=R_tr_ls.shape[1])
+pca_ls_e.fit(R_tr_ls)
+V_ls_e = pca_ls_e.components_
+F_tr_ls20 = (R_tr_ls @ V_ls_e.T)[:, :20]
+ridge_pca20_ls = RidgeCV(alphas=np.logspace(-4, 8, 100), cv=tscv, fit_intercept=False)
+ridge_pca20_ls.fit(F_tr_ls20, Y_tr_ls_e)
+train_port_ls_pca20 = F_tr_ls20 @ ridge_pca20_ls.coef_
+test_port_ls_pca20  = (R_te_ls @ V_ls_e.T)[:, :20] @ ridge_pca20_ls.coef_
 
 # Grid search over weights using TRAIN Sharpe (no look-ahead)
-train_strats = np.column_stack([train_port_lg_ridge, train_port_lg_lasso, train_port_lg_pca20])
+train_strats = np.column_stack([train_port_ls_ridge, train_port_ls_lasso, train_port_ls_pca20])
 test_strats  = np.column_stack([
-    R_te_lg @ ridge_lg.coef_,
-    R_te_lg @ lasso_lg.coef_,
-    test_port_lg_pca20
+    R_te_ls @ ridge_ls_e.coef_,
+    R_te_ls @ lasso_ls_e.coef_,
+    test_port_ls_pca20
 ])
-strat_names = ["LgRidge", "LgLasso", "LgPCA20"]
+strat_names = ["lsret Ridge", "lsret Lasso", "lsret PCA20"]
 
 best_train_sr = -np.inf
 best_weights = None
@@ -317,22 +318,26 @@ for w1 in np.arange(0, 1 + step/2, step):
 
 test_opt = test_strats @ best_weights
 add_candidate(
-    f"Opt Ensemble ({best_weights[0]:.0%}/{best_weights[1]:.0%}/{best_weights[2]:.0%})",
-    test_opt, dt_lg,
+    f"lsret Opt Ensemble ({best_weights[0]:.0%}/{best_weights[1]:.0%}/{best_weights[2]:.0%})",
+    test_opt, dt_ls,
     f"Train-optimized: {best_weights[0]:.0%} Ridge + {best_weights[1]:.0%} Lasso + "
     f"{best_weights[2]:.0%} PCA20 (train SR={best_train_sr:.2f})"
 )
 
 
 # ══════════════════════════════════════════════════════════════════════════════
-# 3. RANK ALL STRATEGIES
+# 3. RANK lsret STRATEGIES (Task 2(e) restricts to lsret.csv portfolios)
 # ══════════════════════════════════════════════════════════════════════════════
 print("\n" + "=" * 70)
-print("ALL STRATEGIES RANKED BY OOS SHARPE RATIO")
+print("lsret STRATEGIES RANKED BY OOS SHARPE RATIO")
+print("(Task 2(e): using the portfolios from lsret.csv)")
 print("=" * 70)
 
-ranked = sorted(candidates.items(), key=lambda x: x[1]["sr"]
-                if not np.isnan(x[1]["sr"]) else -999, reverse=True)
+# Filter to only lsret-derived strategies (exclude LgCap / Cross-Universe / Ensemble Lg)
+ranked_all = sorted(candidates.items(), key=lambda x: x[1]["sr"]
+                    if not np.isnan(x[1]["sr"]) else -999, reverse=True)
+ranked = [(n, r) for n, r in ranked_all
+          if n.startswith("lsret")]
 
 print(f"\n{'Rank':>4s}  {'Strategy':>50s}  {'SR':>8s}  {'Months':>6s}  Description")
 print("-" * 120)
